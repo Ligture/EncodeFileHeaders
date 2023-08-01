@@ -1,17 +1,42 @@
 from Cryptodome.Cipher import AES
 import os
 import hashlib
+import base64
+
+def bytes_ljust(byte_string:bytes, width, fill_byte = b'\0'):
+    if len(byte_string) >= width:
+        return byte_string
+    padding = width - len(byte_string)
+    addbytes = fill_byte * padding
+    print(addbytes)
+    print(byte_string)
+    print('addbytes:', type(addbytes))
+    print('byte_string:', type(byte_string))
+    return byte_string + addbytes
+def b64decode(base64Info: bytes):
+    try:
+        return base64.b64decode(base64Info)
+    except Exception as e:
+        print("异常：", e)
+
+
+def b64encode(data: bytes):
+    try:
+        tmpBase64 = base64.b64encode(data)
+        return tmpBase64
+    except Exception as e:
+        print("异常：", e)
 
 
 def aesen(key: bytes, data: bytes):
     if len(key) <= 16:
-        key = key.ljust(16, b"\0")
+        key = bytes_ljust(key, 16, b"\0")
     else:
-        key = key.ljust(16 * (len(key) // 16 + 1), b"\0")
+        key = bytes_ljust(key, 16 * (len(key) // 16 + 1), b"\0")
     if len(data) == 0:
         return b""
 
-    data = data.ljust(16 * (len(data) // 16 + 1), b"\0")
+    data = bytes_ljust(data, 16 * (len(data) // 16 + 1), b"\0")
     cipher = AES.new(key, AES.MODE_ECB)
     return cipher.encrypt(data)
 
@@ -32,12 +57,11 @@ def remove_bytes_from_file(file_path, num_bytes, writecon, output):
     # 将临时文件替换为原始文件
 
 
-
 def verify(data, password, endata):
     if len(password) <= 16:
-        key = password.ljust(16, b"\0")
+        key = bytes_ljust(password.encode("utf-8"), 16, b"\0")
     else:
-        key = password.ljust(16 * (len(password) // 16 + 1), b"\0")
+        key = bytes_ljust(password.encode("utf-8"), 16 * (len(password) // 16 + 1), b"\0")
     cipher = AES.new(key, AES.MODE_ECB)
     data2 = cipher.decrypt(endata)
     data2 = data2.rstrip(b"\0")
@@ -56,11 +80,24 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
         outputfile = (
             os.path.dirname(filename)
             + "\\"
-            + aesen(
-                password.encode("utf-8"), os.path.basename(filename).encode("utf-8")
-            )
+            + b64encode(
+                aesen(
+                    password.encode("utf-8"), os.path.basename(filename).encode("utf-8")
+                )
+            ).decode("utf-8")
             + ".enc"
         )
+        if not verify(
+            os.path.basename(filename).encode("utf-8"),
+            password,
+            aesen(password.encode("utf-8"), os.path.basename(filename).encode("utf-8")),
+        ):
+            return {
+                "filename": filename,
+                "status": "error",
+                "newfile": None,
+                "reason": "对文件名加密时验证错误",
+            }
     if verify(data, password, newdata):
         h1 = hashlib.md5()
         h1.update(password.encode("utf-8"))
@@ -74,8 +111,17 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
             os.remove(filename)
             return {"filename": filename, "status": "ok", "newfile": outputfile}
         except BaseException as e:
-            return {"filename": filename, "status": "error", "newfile": None, 'reason': e}
-
+            return {
+                "filename": filename,
+                "status": "error",
+                "newfile": None,
+                "reason": e,
+            }
 
     else:
-        return {"filename": filename, "status": "error", "newfile": None, 'reason': '验证错误'}
+        return {
+            "filename": filename,
+            "status": "error",
+            "newfile": None,
+            "reason": "对数据加密时验证错误",
+        }
