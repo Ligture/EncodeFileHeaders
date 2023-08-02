@@ -1,9 +1,12 @@
+import datetime
+
 from Cryptodome.Cipher import AES
 import os
 import hashlib
 import base64
+import time
 
-def bytes_ljust(byte_string:bytes, width, fill_byte = b'\0'):
+"""def bytes_ljust(byte_string:bytes, width, fill_byte = b'\0'):
     if len(byte_string) >= width:
         return byte_string
     padding = width - len(byte_string)
@@ -13,6 +16,9 @@ def bytes_ljust(byte_string:bytes, width, fill_byte = b'\0'):
     print('addbytes:', type(addbytes))
     print('byte_string:', type(byte_string))
     return byte_string + addbytes
+"""
+
+
 def b64decode(base64Info: bytes):
     try:
         return base64.b64decode(base64Info)
@@ -30,13 +36,13 @@ def b64encode(data: bytes):
 
 def aesen(key: bytes, data: bytes):
     if len(key) <= 16:
-        key = bytes_ljust(key, 16, b"\0")
+        key = key.ljust(16, b"\0")
     else:
-        key = bytes_ljust(key, 16 * (len(key) // 16 + 1), b"\0")
+        key = key.ljust(16 * (len(key) // 16 + 1), b"\0")
     if len(data) == 0:
         return b""
 
-    data = bytes_ljust(data, 16 * (len(data) // 16 + 1), b"\0")
+    data = data.ljust(16 * (len(data) // 16 + 1), b"\0")
     cipher = AES.new(key, AES.MODE_ECB)
     return cipher.encrypt(data)
 
@@ -58,10 +64,11 @@ def remove_bytes_from_file(file_path, num_bytes, writecon, output):
 
 
 def verify(data, password, endata):
+    password = password.encode("utf-8")
     if len(password) <= 16:
-        key = bytes_ljust(password.encode("utf-8"), 16, b"\0")
+        key = password.ljust(16, b"\0")
     else:
-        key = bytes_ljust(password.encode("utf-8"), 16 * (len(password) // 16 + 1), b"\0")
+        key = password.ljust(16 * (len(password) // 16 + 1), b"\0")
     cipher = AES.new(key, AES.MODE_ECB)
     data2 = cipher.decrypt(endata)
     data2 = data2.rstrip(b"\0")
@@ -72,6 +79,15 @@ def verify(data, password, endata):
 
 
 def encodefile(filename, password, encodelen=1024, outputfile=None):
+    sttime = time.time()
+    filename = filename.replace("/", "\\")
+    if not os.path.isfile(filename):
+        return {
+            "filename": filename,
+            "status": "error",
+            "newfile": None,
+            "reason": "file not found",
+        }
     data = b""
     with open(filename, "rb") as f:
         data = f.read(encodelen)
@@ -92,11 +108,15 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
             password,
             aesen(password.encode("utf-8"), os.path.basename(filename).encode("utf-8")),
         ):
+            endtime = time.time()
+            endtime = endtime - sttime
+            endtime = datetime.timedelta(seconds=endtime)
             return {
                 "filename": filename,
                 "status": "error",
                 "newfile": None,
                 "reason": "对文件名加密时验证错误",
+                "time": str(endtime),
             }
     if verify(data, password, newdata):
         h1 = hashlib.md5()
@@ -109,19 +129,36 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
         try:
             remove_bytes_from_file(filename, encodelen, wrd, outputfile)
             os.remove(filename)
-            return {"filename": filename, "status": "ok", "newfile": outputfile}
+            endtime = time.time()
+            endtime = endtime - sttime
+            endtime = datetime.timedelta(seconds=endtime)
+            return {
+                "filename": filename,
+                "status": "ok",
+                "newfile": outputfile,
+                "time": str(endtime),
+                "reason": "None",
+            }
         except BaseException as e:
+            endtime = time.time()
+            endtime = endtime - sttime
+            endtime = datetime.timedelta(seconds=endtime)
             return {
                 "filename": filename,
                 "status": "error",
                 "newfile": None,
                 "reason": e,
+                "time": str(endtime),
             }
 
     else:
+        endtime = time.time()
+        endtime = endtime - sttime
+        endtime = datetime.timedelta(seconds=endtime)
         return {
             "filename": filename,
             "status": "error",
             "newfile": None,
             "reason": "对数据加密时验证错误",
+            "time": str(endtime),
         }
