@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
-import random
 
 from PyQt5.QtWidgets import QHeaderView
 
+# noinspection PyUnresolvedReferences
 import resource
 # Form implementation generated from reading ui file 'test.ui'
 #
@@ -17,13 +17,26 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QTextCharFormat, QColor
 from qt_material import apply_stylesheet
 import time
-
+import encode
+import decode
+import threading
 
 def timenow():
     return time.strftime("[%m-%d %H:%M:%S] ", time.localtime())
 
 
+# noinspection PyUnresolvedReferences
+
+class signalsend(QtCore.QObject):
+    mysignal = QtCore.pyqtSignal(list)
+
+
+
+
+
 class Ui_MainWindow(object):
+
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setFixedSize(979, 662)
@@ -78,9 +91,25 @@ class Ui_MainWindow(object):
         self.textEdit.setObjectName("textEdit")
         MainWindow.setCentralWidget(self.centralwidget)
 
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    # noinspection PyUnresolvedReferences
+    @QtCore.pyqtSlot(list)
+    def recevent(list1):
+        format1 = list1[1]
+        msg = list1[0]
+        if format1 == 'green':
+            format1 = self.greenFormat
+        elif format1 == 'red':
+            format1 = self.redFormat
+        elif format1 == 'grey':
+            format1 = self.greyFormat
+        self.log(msg, format1)
+
+    rec = signalsend()
+    rec.mysignal.connect(recevent)
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "文件头加解密"))
@@ -98,8 +127,8 @@ class Ui_MainWindow(object):
         self.treeWidget.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.pushButton.clicked.connect(self.buttonevent)
         self.pushButton_2.clicked.connect(self.choose_dir)
-        self.pushButton_3.clicked.connect(self.startencode)
-        self.pushButton_4.clicked.connect(self.startdecode)
+        self.pushButton_3.clicked.connect(self.startdecode)
+        self.pushButton_4.clicked.connect(self.startencode)
         self.treeWidget.itemChanged.connect(self.checker)
         self.textcursor = self.textEdit.textCursor()
         self.greenFormat = QTextCharFormat()
@@ -113,16 +142,13 @@ class Ui_MainWindow(object):
     def log(self, text, format):
         self.textcursor.insertText(timenow() + text + '\n', format)
 
-
-
-
-
     def updatechecklist(self):
 
         self.checklist = []
+
         def get_checked_items(item):
             checked_items = []
-            if item.checkState(0) == QtCore.Qt.Checked:
+            if item.checkState(0) == QtCore.Qt.CheckState.Checked:
                 checked_items.append(item)
             for i in range(item.childCount()):
                 child = item.child(i)
@@ -130,6 +156,7 @@ class Ui_MainWindow(object):
             return checked_items
 
         check1 = get_checked_items(self.treeWidget.invisibleRootItem())
+
         def getpath(item):
             path = ''
             parentlist = []
@@ -144,15 +171,9 @@ class Ui_MainWindow(object):
             if os.path.isfile(path):
                 return path
 
-
         for i in check1:
             self.checklist.append(getpath(i))
         self.checklist = list(set(filter(None, self.checklist)))
-
-
-
-
-
 
     def choose_dir(self):
         path = QtWidgets.QFileDialog.getExistingDirectory(
@@ -173,7 +194,6 @@ class Ui_MainWindow(object):
                 for i in range(item.childCount()):
                     item.child(i).setCheckState(0, QtCore.Qt.CheckState.Unchecked)
                     self.checker(item.child(i), column)
-
 
     def add(self, parent, text):
         item = QtWidgets.QTreeWidgetItem(parent)
@@ -196,7 +216,7 @@ class Ui_MainWindow(object):
 
             self.startadd(self.lineEdit.text(), self.root)
         else:
-            print("目录不存在")
+            self.log('目录不存在', self.redFormat)
 
     def startadd(self, path, parent):
         path1 = os.listdir(path)
@@ -205,7 +225,7 @@ class Ui_MainWindow(object):
                 item = self.add(parent, os.path.basename(i))
                 size = os.path.getsize(path + "\\" + i)
                 if size > 1024:
-                    item.setText(1, str(size//1024) + ' Kb')
+                    item.setText(1, str(size // 1024) + ' Kb')
                 else:
                     item.setText(1, str(size) + ' b')
                 file_path = path + "\\" + i
@@ -228,13 +248,56 @@ class Ui_MainWindow(object):
                 pitem.setIcon(0, icon)
 
                 self.startadd(path=path + "\\" + i, parent=pitem)
+
     def startencode(self):
-        pass
+        if not self.lineEdit_2.text():
+            self.log('密码不能为空', self.redFormat)
+            return
+
+        print('加密')
+        self.updatechecklist()
+        print(self.checklist)
+        thre = encodefile(self.checklist, self.lineEdit_2.text())
+        thre1 = threading.Thread(target=thre.run)
+        thre1.start()
+        return
     def startdecode(self):
         pass
 
+class encodefile():
+    def __init__(self, listfile, password):
+        super().__init__()
+        self.listfile = listfile
+        self.password = password
+        print('encode:', self.listfile)
+
+    def run(self):
+        print('start run')
+        mysend = Ui_MainWindow.rec.mysignal
+        for i in self.listfile:
+            dict1 = encode.encodefile(i, self.password)
+
+            print(dict1)
+            if dict1['status'] == 'ok':
+                format1 = 'green'
+                filename = dict1['filename']
+                newfile = dict1['newfile']
+                runtime = dict1['time']
+                mysend.emit(['文件:{}加密成功,加密后文件名:{},运行时间:{}'.format(filename, newfile, runtime), format1])
+
+            else:
+                format1 = 'red'
+                filename = dict1['filename']
+                reason = dict1['reason']
+                runtime = dict1['time']
+                mysend.emit(['文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason, runtime), format1])
+
+
+
+
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

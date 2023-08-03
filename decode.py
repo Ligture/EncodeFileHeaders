@@ -51,7 +51,7 @@ def decodefile(filename, password, decodefilename: bool = True):
             newdata = cipher.decrypt(data).rstrip(b'\0')
             if decodefilename:
                 newfile = cipher.decrypt(
-                    base64.b64decode(os.path.basename(filename).replace(".enc", ""))
+                    base64.b64decode(os.path.basename(filename).replace(".enc", "").replace('-', '/'))
                 ).rstrip(b'\0')
                 print(newfile)
                 newfile = os.path.dirname(filename) + "\\" + newfile.decode("utf-8")

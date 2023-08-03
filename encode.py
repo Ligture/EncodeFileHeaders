@@ -129,6 +129,7 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
             length = length.ljust(8, b"\0")
         wrd = bytes(md5, encoding="utf-8") + length + newdata
         try:
+            outputfile = outputfile.replace("/", "-")
             remove_bytes_from_file(filename, encodelen, wrd, outputfile)
             os.remove(filename)
             endtime = time.time()
