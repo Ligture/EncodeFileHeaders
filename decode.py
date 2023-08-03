@@ -1,6 +1,6 @@
 import datetime
 import time
-
+from Cryptodome.Util.Padding import pad, unpad
 from Cryptodome.Cipher import AES
 import os
 import hashlib
@@ -48,11 +48,13 @@ def decodefile(filename, password, decodefilename: bool = True):
         else:
             data = f.read(length)
             cipher = AES.new(passwordnew, AES.MODE_ECB)
-            newdata = cipher.decrypt(data).rstrip(b'\0')
+            newdata = cipher.decrypt(data)
+            newdata = unpad(newdata, AES.block_size)
             if decodefilename:
                 newfile = cipher.decrypt(
                     base64.b64decode(os.path.basename(filename).replace(".enc", "").replace('-', '/'))
-                ).rstrip(b'\0')
+                )
+                newfile = unpad(newfile, AES.block_size)
                 print(newfile)
                 newfile = os.path.dirname(filename) + "\\" + newfile.decode("utf-8")
             with open(newfile, 'wb') as nf:

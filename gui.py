@@ -96,7 +96,8 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     # noinspection PyUnresolvedReferences
-    @QtCore.pyqtSlot(list)
+    '''
+    @QtCore.pyqtSlot(list) #槽函数
     def recevent(list1):
         format1 = list1[1]
         msg = list1[0]
@@ -108,8 +109,9 @@ class Ui_MainWindow(object):
             format1 = self.greyFormat
         self.log(msg, format1)
 
-    rec = signalsend()
+    rec = signalsend() #信号
     rec.mysignal.connect(recevent)
+    '''
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "文件头加解密"))
@@ -142,6 +144,14 @@ class Ui_MainWindow(object):
     def log(self, text, format):
         self.textcursor.insertText(timenow() + text + '\n', format)
 
+    def pr(self, text, format):
+        if format == 'red':
+            format=self.redFormat
+        elif format == 'green':
+            format=self.greenFormat
+        elif format == 'grey':
+            format=self.greyFormat
+        self.log(text, format)
     def updatechecklist(self):
 
         self.checklist = []
@@ -273,7 +283,6 @@ class encodefile():
 
     def run(self):
         print('start run')
-        mysend = Ui_MainWindow.rec.mysignal
         for i in self.listfile:
             dict1 = encode.encodefile(i, self.password)
 
@@ -283,15 +292,17 @@ class encodefile():
                 filename = dict1['filename']
                 newfile = dict1['newfile']
                 runtime = dict1['time']
-                mysend.emit(['文件:{}加密成功,加密后文件名:{},运行时间:{}'.format(filename, newfile, runtime), format1])
+                ui.pr('文件:{}加密成功,加密后文件名:{},运行时间:{}'.format(filename, newfile, runtime), format1)
+
+
 
             else:
                 format1 = 'red'
                 filename = dict1['filename']
                 reason = dict1['reason']
                 runtime = dict1['time']
-                mysend.emit(['文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason, runtime), format1])
-
+                ui.pr('文件:{}加密成功,原因:{},运行时间:{}'.format(filename, reason, runtime), format1)
+        ui.buttonevent()
 
 
 

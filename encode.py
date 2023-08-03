@@ -6,7 +6,7 @@ import hashlib
 import base64
 import time
 import mmap
-
+from Cryptodome.Util.Padding import pad, unpad
 """def bytes_ljust(byte_string:bytes, width, fill_byte = b'\0'):
     if len(byte_string) >= width:
         return byte_string
@@ -43,7 +43,7 @@ def aesen(key: bytes, data: bytes):
     if len(data) == 0:
         return b""
 
-    data = data.ljust(16 * (len(data) // 16 + 1), b"\0")
+    data = pad(data, AES.block_size)
     cipher = AES.new(key, AES.MODE_ECB)
     return cipher.encrypt(data)
 
@@ -73,10 +73,12 @@ def verify(data, password, endata):
         key = password.ljust(16 * (len(password) // 16 + 1), b"\0")
     cipher = AES.new(key, AES.MODE_ECB)
     data2 = cipher.decrypt(endata)
-    data2 = data2.rstrip(b"\0")
+    data2 = unpad(data2, AES.block_size)
     if data2 == data:
         return True
     else:
+        print('data:', data)
+        print('data2:', data2)
         return False
 
 
