@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from PyQt5.QtWidgets import QHeaderView
+from PyQt5.QtWidgets import QHeaderView, QTextEdit
 
 # noinspection PyUnresolvedReferences
 import resource
@@ -89,6 +89,7 @@ class Ui_MainWindow(object):
         self.textEdit.setGeometry(QtCore.QRect(530, 520, 441, 131))
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName("textEdit")
+        self.textEdit.setLineWrapMode(QTextEdit.NoWrap)
         MainWindow.setCentralWidget(self.centralwidget)
 
 
@@ -272,7 +273,49 @@ class Ui_MainWindow(object):
         thre1.start()
         return
     def startdecode(self):
-        pass
+        if not self.lineEdit_2.text():
+            self.log('密码不能为空', self.redFormat)
+            return
+
+        print('解密')
+        self.updatechecklist()
+        print(self.checklist)
+        thre = decodefile(self.checklist, self.lineEdit_2.text())
+        thre1 = threading.Thread(target=thre.run)
+        thre1.start()
+        return
+
+class decodefile():
+    def __init__(self, listfile, password):
+        super().__init__()
+        self.listfile = listfile
+        self.password = password
+        print('encode:', self.listfile)
+
+    def run(self):
+        print('start run')
+        for i in self.listfile:
+            dict1 = decode.decodefile(i, self.password)
+
+            print(dict1)
+            if dict1['status'] == 'ok':
+                format1 = 'green'
+                filename = dict1['filename']
+                newfile = dict1['newfile']
+                runtime = dict1['time']
+                ui.pr('文件:{}解密成功,解密后文件名:{},运行时间:{}'.format(filename, newfile, runtime), format1)
+
+
+
+            else:
+                format1 = 'red'
+                filename = dict1['filename']
+                reason = dict1['reason']
+                runtime = dict1['time']
+                ui.pr('文件:{}解密失败,原因:{},运行时间:{}'.format(filename, reason, runtime), format1)
+        ui.buttonevent()
+
+
 
 class encodefile():
     def __init__(self, listfile, password):
@@ -301,7 +344,7 @@ class encodefile():
                 filename = dict1['filename']
                 reason = dict1['reason']
                 runtime = dict1['time']
-                ui.pr('文件:{}加密成功,原因:{},运行时间:{}'.format(filename, reason, runtime), format1)
+                ui.pr('文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason, runtime), format1)
         ui.buttonevent()
 
 
