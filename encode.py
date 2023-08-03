@@ -5,6 +5,7 @@ import os
 import hashlib
 import base64
 import time
+import mmap
 
 """def bytes_ljust(byte_string:bytes, width, fill_byte = b'\0'):
     if len(byte_string) >= width:
@@ -48,8 +49,8 @@ def aesen(key: bytes, data: bytes):
 
 
 def remove_bytes_from_file(file_path, num_bytes, writecon, output):
-    temp_file_path = output
 
+    temp_file_path = output
     with open(file_path, "rb") as src_file, open(temp_file_path, "wb") as dest_file:
         src_file.seek(num_bytes)
         buffer_size = 8192  # 8KB 缓冲区大小
@@ -61,6 +62,7 @@ def remove_bytes_from_file(file_path, num_bytes, writecon, output):
             dest_file.write(buffer)
 
     # 将临时文件替换为原始文件
+
 
 
 def verify(data, password, endata):
