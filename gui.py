@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-
+import argparse
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
 
 # noinspection PyUnresolvedReferences
@@ -226,6 +226,31 @@ class Ui_MainWindow(object):
             print(self.root.parent())
 
             self.startadd(self.lineEdit.text(), self.root)
+        elif os.path.isfile(self.lineEdit.text()):
+            self.treeWidget.clear()
+            self.root = QtWidgets.QTreeWidgetItem(self.treeWidget)
+            self.root.setText(0, self.lineEdit.text())
+            self.root.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
+            icon_provider = QtWidgets.QFileIconProvider()
+            file_info = QtCore.QFileInfo(self.lineEdit.text())
+            icon = icon_provider.icon(file_info)
+
+            size = os.path.getsize(self.lineEdit.text())
+            if size > 1024:
+                self.root.setText(1, str(size // 1024) + ' Kb')
+            else:
+                self.root.setText(1, str(size) + ' b')
+
+            if os.path.splitext(self.lineEdit.text())[-1] == '.enc':
+
+                self.root.setText(2, '√')
+            else:
+
+                self.root.setText(2, '×')
+
+
+            self.root.setIcon(0, icon)
+
         else:
             self.log('目录不存在', self.redFormat)
 
@@ -354,7 +379,19 @@ if __name__ == "__main__":
 
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
+    parser = argparse.ArgumentParser(description='参数')
+    parser.add_argument('-p', '--password', help='密码', required=False)
+    parser.add_argument('-fp', '--folderpath', help='目录', required=False)
+    args = parser.parse_args()
+
+
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
+    if args.password:
+        ui.lineEdit_2.insert(args.password)
+    if args.folderpath:
+        ui.lineEdit.insert(args.folderpath)
+        ui.buttonevent()
+        ui.treeWidget.expandAll()
     sys.exit(app.exec_())
