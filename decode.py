@@ -1,7 +1,7 @@
 import datetime
 import time
-from Cryptodome.Util.Padding import unpad
-from Cryptodome.Cipher import AES
+from Crypto.Util.Padding import unpad
+from Crypto.Cipher import AES
 import os
 import hashlib
 import base64

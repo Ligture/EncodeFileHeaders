@@ -133,6 +133,7 @@ class Ui_MainWindow(object):
         self.pushButton_3.clicked.connect(self.startdecode)
         self.pushButton_4.clicked.connect(self.startencode)
         self.treeWidget.itemChanged.connect(self.checker)
+        self.treeWidget.itemExpanded.connect()
         self.textcursor = self.textEdit.textCursor()
         self.greenFormat = QTextCharFormat()
         self.redFormat = QTextCharFormat()
