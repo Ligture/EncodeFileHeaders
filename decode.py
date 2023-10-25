@@ -25,26 +25,26 @@ def decodefile(filename, password, decodefilename: bool = True):
     if not os.path.isfile(filename):
         endtime = time.time()
         endtime = endtime - sttime
-        endtime = datetime.timedelta(seconds=endtime)
+        #endtime = datetime.timedelta(seconds=endtime)
         return {
             "filename": filename,
             "status": "error",
             "newfile": None,
             "reason": "file not found",
-            "time": str(endtime),
+            "time": endtime,
         }
 
     if os.path.splitext(filename)[-1] != ".enc":
         endtime = time.time()
         endtime = endtime - sttime
-        endtime = datetime.timedelta(seconds=endtime)
+        #endtime = datetime.timedelta(seconds=endtime)
 
         return {
             "filename": filename,
             "status": "error",
             "newfile": None,
             "reason": "文件未被加密",
-            "time": str(endtime),
+            "time": endtime,
         }
 
     f1 = open(filename, "rb")
@@ -58,14 +58,14 @@ def decodefile(filename, password, decodefilename: bool = True):
     if md5_check != md5.decode("utf-8"):
         endtime = time.time()
         endtime = endtime - sttime
-        endtime = datetime.timedelta(seconds=endtime)
+        #endtime = datetime.timedelta(seconds=endtime)
         f1.close()
         return {
             "filename": filename,
             "status": "error",
             "newfile": None,
             "reason": "密码错误",
-            "time": str(endtime),
+            "time": endtime,
         }
     else:
 
@@ -76,7 +76,11 @@ def decodefile(filename, password, decodefilename: bool = True):
         print(data)
         newdata = cipher.decrypt(data)
         print(newdata)
-        newdata = unpad(newdata, AES.block_size, 'pkcs7')
+        try:
+            newdata = unpad(newdata, AES.block_size, 'pkcs7')
+        except BaseException as e:
+            print(e)
+
         if decodefilename:
             newfile = cipher.decrypt(
                 base64.b64decode(
@@ -100,12 +104,12 @@ def decodefile(filename, password, decodefilename: bool = True):
         f1.close()
         endtime = time.time()
         endtime = endtime - sttime
-        endtime = datetime.timedelta(seconds=endtime)
+        #endtime = datetime.timedelta(seconds=endtime)
         os.remove(filename)
         return {
             "filename": filename,
             "status": "ok",
             "newfile": newfile,
             "reason": None,
-            "time": str(endtime),
+            "time": endtime,
         }

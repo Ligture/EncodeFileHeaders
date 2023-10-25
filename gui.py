@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import os
 import argparse
 from PyQt5.QtWidgets import QHeaderView, QTextEdit
@@ -21,6 +22,7 @@ import encode
 import decode
 import threading
 
+
 def timenow():
     return time.strftime("[%m-%d %H:%M:%S] ", time.localtime())
 
@@ -31,11 +33,7 @@ class signalsend(QtCore.QObject):
     mysignal = QtCore.pyqtSignal(list)
 
 
-
-
-
 class Ui_MainWindow(object):
-
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -92,27 +90,14 @@ class Ui_MainWindow(object):
         self.textEdit.setLineWrapMode(QTextEdit.NoWrap)
         MainWindow.setCentralWidget(self.centralwidget)
 
-
+        self.message = QtWidgets.QMessageBox()
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     # noinspection PyUnresolvedReferences
-    '''
-    @QtCore.pyqtSlot(list) #槽函数
-    def recevent(list1):
-        format1 = list1[1]
-        msg = list1[0]
-        if format1 == 'green':
-            format1 = self.greenFormat
-        elif format1 == 'red':
-            format1 = self.redFormat
-        elif format1 == 'grey':
-            format1 = self.greyFormat
-        self.log(msg, format1)
 
-    rec = signalsend() #信号
-    rec.mysignal.connect(recevent)
-    '''
+
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "文件头加解密"))
@@ -133,7 +118,7 @@ class Ui_MainWindow(object):
         self.pushButton_3.clicked.connect(self.startdecode)
         self.pushButton_4.clicked.connect(self.startencode)
         self.treeWidget.itemChanged.connect(self.checker)
-        self.treeWidget.itemExpanded.connect()
+        # self.treeWidget.itemExpanded.connect()
         self.textcursor = self.textEdit.textCursor()
         self.greenFormat = QTextCharFormat()
         self.redFormat = QTextCharFormat()
@@ -148,19 +133,20 @@ class Ui_MainWindow(object):
 
     def pr(self, text, format):
         if format == 'red':
-            format=self.redFormat
+            format = self.redFormat
         elif format == 'green':
-            format=self.greenFormat
+            format = self.greenFormat
         elif format == 'grey':
-            format=self.greyFormat
+            format = self.greyFormat
         self.log(text, format)
-    def updatechecklist(self):
+
+    def updatechecklist(self, encode):
 
         self.checklist = []
 
         def get_checked_items(item):
             checked_items = []
-            if item.checkState(0) == QtCore.Qt.CheckState.Checked:
+            if item.checkState(0) == QtCore.Qt.CheckState.Checked and (os.path.splitext(item.text(0))[-1] != '.enc' or encode is False):
                 checked_items.append(item)
             for i in range(item.childCount()):
                 child = item.child(i)
@@ -249,11 +235,26 @@ class Ui_MainWindow(object):
 
                 self.root.setText(2, '×')
 
-
             self.root.setIcon(0, icon)
 
         else:
             self.log('目录不存在', self.redFormat)
+    def messgaebox(self,type,title,text):
+        if type == 'info':
+            self.message.information(MainWindow, title, text)
+        if type == 'warning':
+            self.message.warning(MainWindow, title, text)
+        if type == 'critical':
+            self.message.critical(MainWindow, title, text)
+
+    @QtCore.pyqtSlot(list)  # 槽函数
+    def recevent(l1):
+        mestype = l1[0]
+        mestitle = l1[1]
+        mesinfo = l1[2]
+
+    rec = signalsend()  # 信号
+    rec.mysignal.connect(recevent)
 
     def startadd(self, path, parent):
         path1 = os.listdir(path)
@@ -292,24 +293,26 @@ class Ui_MainWindow(object):
             return
 
         print('加密')
-        self.updatechecklist()
+        self.updatechecklist(encode=True)
         print(self.checklist)
         thre = encodefile(self.checklist, self.lineEdit_2.text())
         thre1 = threading.Thread(target=thre.run)
         thre1.start()
         return
+
     def startdecode(self):
         if not self.lineEdit_2.text():
             self.log('密码不能为空', self.redFormat)
             return
 
         print('解密')
-        self.updatechecklist()
+        self.updatechecklist(encode=False)
         print(self.checklist)
         thre = decodefile(self.checklist, self.lineEdit_2.text())
         thre1 = threading.Thread(target=thre.run)
         thre1.start()
         return
+
 
 class decodefile():
     def __init__(self, listfile, password):
@@ -342,16 +345,17 @@ class decodefile():
         ui.buttonevent()
 
 
-
 class encodefile():
     def __init__(self, listfile, password):
         super().__init__()
         self.listfile = listfile
         self.password = password
+        self.message = QtWidgets.QMessageBox()
         print('encode:', self.listfile)
 
     def run(self):
         print('start run')
+        tim = 0
         for i in self.listfile:
             dict1 = encode.encodefile(i, self.password)
 
@@ -361,7 +365,10 @@ class encodefile():
                 filename = dict1['filename']
                 newfile = dict1['newfile']
                 runtime = dict1['time']
-                ui.pr('文件:{}加密成功,加密后文件名:{},运行时间:{}'.format(filename, newfile, runtime), format1)
+                ui.pr('文件:{}加密成功,加密后文件名:{},运行时间:{}'.format(filename, newfile,
+                                                                           str(datetime.timedelta(seconds=runtime))),
+                      format1)
+                tim += runtime
 
 
 
@@ -370,9 +377,13 @@ class encodefile():
                 filename = dict1['filename']
                 reason = dict1['reason']
                 runtime = dict1['time']
-                ui.pr('文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason, runtime), format1)
-        ui.buttonevent()
+                ui.pr('文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason,
+                                                                   str(datetime.timedelta(seconds=runtime))), format1)
+                tim += runtime
 
+        ui.buttonevent()
+        text = '加密完成,总用时:'+str(datetime.timedelta(seconds=tim))
+        ui.messgaebox('info', '信息', text)
 
 
 if __name__ == "__main__":
@@ -384,7 +395,6 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--password', help='密码', required=False)
     parser.add_argument('-fp', '--folderpath', help='目录', required=False)
     args = parser.parse_args()
-
 
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)

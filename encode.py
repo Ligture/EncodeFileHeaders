@@ -73,7 +73,13 @@ def verify(data, password, endata):
         key = password.ljust(16 * (len(password) // 16 + 1), b"\0")
     cipher = AES.new(key, AES.MODE_ECB)
     data2 = cipher.decrypt(endata)
-    data2 = unpad(data2, AES.block_size)
+    try:
+        data2 = unpad(data2, AES.block_size)
+    except BaseException as e:
+
+        print(e)
+
+
     if data2 == data:
         return True
     else:
@@ -114,13 +120,13 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
         ):
             endtime = time.time()
             endtime = endtime - sttime
-            endtime = datetime.timedelta(seconds=endtime)
+            #endtime = datetime.timedelta(seconds=endtime)
             return {
                 "filename": filename,
                 "status": "error",
                 "newfile": None,
                 "reason": "对文件名加密时验证错误",
-                "time": str(endtime),
+                "time": endtime,
             }
     if verify(data, password, newdata):
         h1 = hashlib.md5()
@@ -136,24 +142,24 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
             os.remove(filename)
             endtime = time.time()
             endtime = endtime - sttime
-            endtime = datetime.timedelta(seconds=endtime)
+            #endtime = datetime.timedelta(seconds=endtime)
             return {
                 "filename": filename,
                 "status": "ok",
                 "newfile": outputfile,
-                "time": str(endtime),
+                "time": endtime,
                 "reason": "None",
             }
         except BaseException as e:
             endtime = time.time()
             endtime = endtime - sttime
-            endtime = datetime.timedelta(seconds=endtime)
+            #endtime = datetime.timedelta(seconds=endtime)
             return {
                 "filename": filename,
                 "status": "error",
                 "newfile": None,
                 "reason": e,
-                "time": str(endtime),
+                "time": endtime,
             }
 
     else:
@@ -165,5 +171,5 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
             "status": "error",
             "newfile": None,
             "reason": "对数据加密时验证错误",
-            "time": str(endtime),
+            "time": endtime,
         }
