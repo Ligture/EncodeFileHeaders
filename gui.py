@@ -29,8 +29,6 @@ def timenow():
 
 # noinspection PyUnresolvedReferences
 
-class signalsend(QtCore.QObject):
-    mysignal = QtCore.pyqtSignal(list)
 
 
 class Ui_MainWindow(object):
@@ -247,14 +245,32 @@ class Ui_MainWindow(object):
         if type == 'critical':
             self.message.critical(MainWindow, title, text)
 
-    @QtCore.pyqtSlot(list)  # 槽函数
-    def recevent(l1):
-        mestype = l1[0]
-        mestitle = l1[1]
-        mesinfo = l1[2]
+    class QTypeSlot(QtCore.QObject):
 
-    rec = signalsend()  # 信号
-    rec.mysignal.connect(recevent)
+        def __init__(self):
+            super(ui.QTypeSlot, self).__init__()
+        def msg(self, msg):
+            type = msg[0]
+            title = msg[1]
+            text = msg[2]
+            self.message = QtWidgets.QMessageBox()
+            if type == 'info':
+                self.message.information(MainWindow, title, text)
+            if type == 'warning':
+                self.message.warning(MainWindow, title, text)
+            if type == 'critical':
+                self.message.critical(MainWindow, title, text)
+
+    class QTypeSignal(QtCore.QObject):
+        mysignal = QtCore.pyqtSignal(list)
+
+        def __init__(self):
+            super(ui.QTypeSignal, self).__init__()
+
+
+
+        def sendmsg(self,arg):
+            self.mysignal.emit(arg)
 
     def startadd(self, path, parent):
         path1 = os.listdir(path)
@@ -323,6 +339,7 @@ class decodefile():
 
     def run(self):
         print('start run')
+        tim = 0
         for i in self.listfile:
             dict1 = decode.decodefile(i, self.password)
 
@@ -333,6 +350,7 @@ class decodefile():
                 newfile = dict1['newfile']
                 runtime = dict1['time']
                 ui.pr('文件:{}解密成功,解密后文件名:{},运行时间:{}'.format(filename, newfile, runtime), format1)
+                tim += runtime
 
 
 
@@ -342,8 +360,11 @@ class decodefile():
                 reason = dict1['reason']
                 runtime = dict1['time']
                 ui.pr('文件:{}解密失败,原因:{},运行时间:{}'.format(filename, reason, runtime), format1)
+                tim += runtime
+                send.sendmsg(['warning', '解密失败', '文件:{}解密失败,原因:{},运行时间:{}'.format(filename, reason, runtime)])
         ui.buttonevent()
-
+        text = '解密完成,总用时:'+str(datetime.timedelta(seconds=tim))
+        send.sendmsg(['info', '解密完成', text])
 
 class encodefile():
     def __init__(self, listfile, password):
@@ -380,15 +401,18 @@ class encodefile():
                 ui.pr('文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason,
                                                                    str(datetime.timedelta(seconds=runtime))), format1)
                 tim += runtime
+                send.sendmsg(
+                    ['warning', '加密失败', '文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason, runtime)])
 
         ui.buttonevent()
         text = '加密完成,总用时:'+str(datetime.timedelta(seconds=tim))
-        ui.messgaebox('info', '信息', text)
+        send.sendmsg(['info', '加密完成', text])
 
 
 if __name__ == "__main__":
     import sys
-
+    global send
+    global slot
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     parser = argparse.ArgumentParser(description='参数')
@@ -399,6 +423,10 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
+    send = ui.QTypeSignal()
+    slot = ui.QTypeSlot()
+    send.mysignal.connect(slot.msg)
+
     if args.password:
         ui.lineEdit_2.insert(args.password)
     if args.folderpath:
