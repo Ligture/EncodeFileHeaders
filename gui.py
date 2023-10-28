@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QHeaderView, QTextEdit
 
 # noinspection PyUnresolvedReferences
 import resource
+
 # Form implementation generated from reading ui file 'test.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
@@ -30,16 +31,16 @@ def timenow():
 # noinspection PyUnresolvedReferences
 
 
-
 class Ui_MainWindow(object):
-
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setFixedSize(979, 662)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/qimage.jpg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(
+            QtGui.QPixmap(":/qimage.jpg"), QtGui.QIcon.Normal, QtGui.QIcon.Off
+        )
         MainWindow.setWindowIcon(icon)
-        apply_stylesheet(MainWindow, theme='light_purple.xml', css_file='ui.css')
+        apply_stylesheet(MainWindow, theme="light_purple.xml", css_file="ui.css")
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.treeWidget = QtWidgets.QTreeWidget(self.centralwidget)
@@ -63,7 +64,9 @@ class Ui_MainWindow(object):
         self.pushButton_2.setObjectName("pushButton_2")
         self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_3.setGeometry(QtCore.QRect(310, 540, 161, 41))
-        self.pushButton_3.setLocale(QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.China))
+        self.pushButton_3.setLocale(
+            QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.China)
+        )
         self.pushButton_3.setObjectName("pushButton_3")
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(10, 480, 61, 31))
@@ -73,7 +76,9 @@ class Ui_MainWindow(object):
         self.label.setObjectName("label")
         self.pushButton_4 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_4.setGeometry(QtCore.QRect(310, 610, 161, 41))
-        self.pushButton_4.setLocale(QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.China))
+        self.pushButton_4.setLocale(
+            QtCore.QLocale(QtCore.QLocale.Chinese, QtCore.QLocale.China)
+        )
         self.pushButton_4.setObjectName("pushButton_4")
         self.lineEdit_2 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit_2.setGeometry(QtCore.QRect(550, 480, 421, 31))
@@ -93,8 +98,6 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     # noinspection PyUnresolvedReferences
-
-
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -124,27 +127,28 @@ class Ui_MainWindow(object):
         self.greenFormat.setForeground(QColor(0, 128, 0))
         self.redFormat.setForeground(QColor(255, 0, 0))
         self.greyFormat.setForeground(QColor(128, 128, 128))
-        self.log('程序启动', self.greenFormat)
+        self.log("程序启动", self.greenFormat)
 
     def log(self, text, format):
-        self.textcursor.insertText(timenow() + text + '\n', format)
+        self.textcursor.insertText(timenow() + text + "\n", format)
 
     def pr(self, text, format):
-        if format == 'red':
+        if format == "red":
             format = self.redFormat
-        elif format == 'green':
+        elif format == "green":
             format = self.greenFormat
-        elif format == 'grey':
+        elif format == "grey":
             format = self.greyFormat
         self.log(text, format)
 
     def updatechecklist(self, encode):
-
         self.checklist = []
 
         def get_checked_items(item):
             checked_items = []
-            if item.checkState(0) == QtCore.Qt.CheckState.Checked and (os.path.splitext(item.text(0))[-1] != '.enc' or encode is False):
+            if item.checkState(0) == QtCore.Qt.CheckState.Checked and (
+                os.path.splitext(item.text(0))[-1] != ".enc" or encode is False
+            ):
                 checked_items.append(item)
             for i in range(item.childCount()):
                 child = item.child(i)
@@ -154,7 +158,7 @@ class Ui_MainWindow(object):
         check1 = get_checked_items(self.treeWidget.invisibleRootItem())
 
         def getpath(item):
-            path = ''
+            path = ""
             parentlist = []
             parent = item.parent()
             while parent is not None:
@@ -183,7 +187,6 @@ class Ui_MainWindow(object):
                 for i in range(item.childCount()):
                     item.child(i).setCheckState(0, QtCore.Qt.CheckState.Checked)
                     self.checker(item.child(i), column)
-
 
         else:
             if item.childCount() > 0:
@@ -222,43 +225,42 @@ class Ui_MainWindow(object):
 
             size = os.path.getsize(self.lineEdit.text())
             if size > 1024:
-                self.root.setText(1, str(size // 1024) + ' Kb')
+                self.root.setText(1, str(size // 1024) + " Kb")
             else:
-                self.root.setText(1, str(size) + ' b')
+                self.root.setText(1, str(size) + " b")
 
-            if os.path.splitext(self.lineEdit.text())[-1] == '.enc':
-
-                self.root.setText(2, '√')
+            if os.path.splitext(self.lineEdit.text())[-1] == ".enc":
+                self.root.setText(2, "√")
             else:
-
-                self.root.setText(2, '×')
+                self.root.setText(2, "×")
 
             self.root.setIcon(0, icon)
 
         else:
-            self.log('目录不存在', self.redFormat)
-    def messgaebox(self,type,title,text):
-        if type == 'info':
+            self.log("目录不存在", self.redFormat)
+
+    def messgaebox(self, type, title, text):
+        if type == "info":
             self.message.information(MainWindow, title, text)
-        if type == 'warning':
+        if type == "warning":
             self.message.warning(MainWindow, title, text)
-        if type == 'critical':
+        if type == "critical":
             self.message.critical(MainWindow, title, text)
 
     class QTypeSlot(QtCore.QObject):
-
         def __init__(self):
             super(ui.QTypeSlot, self).__init__()
+
         def msg(self, msg):
             type = msg[0]
             title = msg[1]
             text = msg[2]
             self.message = QtWidgets.QMessageBox()
-            if type == 'info':
+            if type == "info":
                 self.message.information(MainWindow, title, text)
-            if type == 'warning':
+            if type == "warning":
                 self.message.warning(MainWindow, title, text)
-            if type == 'critical':
+            if type == "critical":
                 self.message.critical(MainWindow, title, text)
 
     class QTypeSignal(QtCore.QObject):
@@ -267,9 +269,7 @@ class Ui_MainWindow(object):
         def __init__(self):
             super(ui.QTypeSignal, self).__init__()
 
-
-
-        def sendmsg(self,arg):
+        def sendmsg(self, arg):
             self.mysignal.emit(arg)
 
     def startadd(self, path, parent):
@@ -279,25 +279,23 @@ class Ui_MainWindow(object):
                 item = self.add(parent, os.path.basename(i))
                 size = os.path.getsize(path + "\\" + i)
                 if size > 1024:
-                    item.setText(1, str(size // 1024) + ' Kb')
+                    item.setText(1, str(size // 1024) + " Kb")
                 else:
-                    item.setText(1, str(size) + ' b')
+                    item.setText(1, str(size) + " b")
                 file_path = path + "\\" + i
                 icon_provider = QtWidgets.QFileIconProvider()
                 file_info = QtCore.QFileInfo(file_path)
                 icon = icon_provider.icon(file_info)
                 item.setIcon(0, icon)
-                if os.path.splitext(file_path)[-1] == '.enc':
-                    item.setText(2, '√')
+                if os.path.splitext(file_path)[-1] == ".enc":
+                    item.setText(2, "√")
                 else:
-                    item.setText(2, '×')
-
-
+                    item.setText(2, "×")
 
             else:
                 pitem = self.add(parent, os.path.basename(i))
                 icon_provider = QtWidgets.QFileIconProvider()
-                file_info = QtCore.QFileInfo(path + '\\' + i)
+                file_info = QtCore.QFileInfo(path + "\\" + i)
                 icon = icon_provider.icon(file_info)
                 pitem.setIcon(0, icon)
 
@@ -305,10 +303,10 @@ class Ui_MainWindow(object):
 
     def startencode(self):
         if not self.lineEdit_2.text():
-            self.log('密码不能为空', self.redFormat)
+            self.log("密码不能为空", self.redFormat)
             return
 
-        print('加密')
+        print("加密")
         self.updatechecklist(encode=True)
         print(self.checklist)
         thre = encodefile(self.checklist, self.lineEdit_2.text())
@@ -318,10 +316,10 @@ class Ui_MainWindow(object):
 
     def startdecode(self):
         if not self.lineEdit_2.text():
-            self.log('密码不能为空', self.redFormat)
+            self.log("密码不能为空", self.redFormat)
             return
 
-        print('解密')
+        print("解密")
         self.updatechecklist(encode=False)
         print(self.checklist)
         thre = decodefile(self.checklist, self.lineEdit_2.text())
@@ -330,94 +328,115 @@ class Ui_MainWindow(object):
         return
 
 
-class decodefile():
+class decodefile:
     def __init__(self, listfile, password):
         super().__init__()
         self.listfile = listfile
         self.password = password
-        print('encode:', self.listfile)
+        print("encode:", self.listfile)
 
     def run(self):
-        print('start run')
+        print("start run")
         tim = 0
         for i in self.listfile:
             dict1 = decode.decodefile(i, self.password)
 
             print(dict1)
-            if dict1['status'] == 'ok':
-                format1 = 'green'
-                filename = dict1['filename']
-                newfile = dict1['newfile']
-                runtime = dict1['time']
-                ui.pr('文件:{}解密成功,解密后文件名:{},运行时间:{}'.format(filename, newfile, runtime), format1)
+            if dict1["status"] == "ok":
+                format1 = "green"
+                filename = dict1["filename"]
+                newfile = dict1["newfile"]
+                runtime = dict1["time"]
+                ui.pr(
+                    "文件:{}解密成功,解密后文件名:{},运行时间:{}".format(filename, newfile, runtime),
+                    format1,
+                )
                 tim += runtime
-
-
 
             else:
-                format1 = 'red'
-                filename = dict1['filename']
-                reason = dict1['reason']
-                runtime = dict1['time']
-                ui.pr('文件:{}解密失败,原因:{},运行时间:{}'.format(filename, reason, runtime), format1)
+                format1 = "red"
+                filename = dict1["filename"]
+                reason = dict1["reason"]
+                runtime = dict1["time"]
+                ui.pr(
+                    "文件:{}解密失败,原因:{},运行时间:{}".format(filename, reason, runtime), format1
+                )
                 tim += runtime
-                send.sendmsg(['warning', '解密失败', '文件:{}解密失败,原因:{},运行时间:{}'.format(filename, reason, runtime)])
+                send.sendmsg(
+                    [
+                        "warning",
+                        "解密失败",
+                        "文件:{}解密失败,原因:{},运行时间:{}".format(filename, reason, runtime),
+                    ]
+                )
         ui.buttonevent()
-        text = '解密完成,总用时:'+str(datetime.timedelta(seconds=tim))
-        send.sendmsg(['info', '解密完成', text])
+        text = "解密完成,总用时:" + str(datetime.timedelta(seconds=tim))
+        send.sendmsg(["info", "解密完成", text])
 
-class encodefile():
+
+class encodefile:
     def __init__(self, listfile, password):
         super().__init__()
         self.listfile = listfile
         self.password = password
         self.message = QtWidgets.QMessageBox()
-        print('encode:', self.listfile)
+        print("encode:", self.listfile)
 
     def run(self):
-        print('start run')
+        print("start run")
         tim = 0
         for i in self.listfile:
             dict1 = encode.encodefile(i, self.password)
 
             print(dict1)
-            if dict1['status'] == 'ok':
-                format1 = 'green'
-                filename = dict1['filename']
-                newfile = dict1['newfile']
-                runtime = dict1['time']
-                ui.pr('文件:{}加密成功,加密后文件名:{},运行时间:{}'.format(filename, newfile,
-                                                                           str(datetime.timedelta(seconds=runtime))),
-                      format1)
+            if dict1["status"] == "ok":
+                format1 = "green"
+                filename = dict1["filename"]
+                newfile = dict1["newfile"]
+                runtime = dict1["time"]
+                ui.pr(
+                    "文件:{}加密成功,加密后文件名:{},运行时间:{}".format(
+                        filename, newfile, str(datetime.timedelta(seconds=runtime))
+                    ),
+                    format1,
+                )
                 tim += runtime
-
-
 
             else:
-                format1 = 'red'
-                filename = dict1['filename']
-                reason = dict1['reason']
-                runtime = dict1['time']
-                ui.pr('文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason,
-                                                                   str(datetime.timedelta(seconds=runtime))), format1)
+                format1 = "red"
+                filename = dict1["filename"]
+                reason = dict1["reason"]
+                runtime = dict1["time"]
+                ui.pr(
+                    "文件:{}加密失败,原因:{},运行时间:{}".format(
+                        filename, reason, str(datetime.timedelta(seconds=runtime))
+                    ),
+                    format1,
+                )
                 tim += runtime
                 send.sendmsg(
-                    ['warning', '加密失败', '文件:{}加密失败,原因:{},运行时间:{}'.format(filename, reason, runtime)])
+                    [
+                        "warning",
+                        "加密失败",
+                        "文件:{}加密失败,原因:{},运行时间:{}".format(filename, reason, runtime),
+                    ]
+                )
 
         ui.buttonevent()
-        text = '加密完成,总用时:'+str(datetime.timedelta(seconds=tim))
-        send.sendmsg(['info', '加密完成', text])
+        text = "加密完成,总用时:" + str(datetime.timedelta(seconds=tim))
+        send.sendmsg(["info", "加密完成", text])
 
 
 if __name__ == "__main__":
     import sys
+
     global send
     global slot
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    parser = argparse.ArgumentParser(description='参数')
-    parser.add_argument('-p', '--password', help='密码', required=False)
-    parser.add_argument('-fp', '--folderpath', help='目录', required=False)
+    parser = argparse.ArgumentParser(description="参数")
+    parser.add_argument("-p", "--password", help="密码", required=False)
+    parser.add_argument("-fp", "--folderpath", help="目录", required=False)
     args = parser.parse_args()
 
     ui = Ui_MainWindow()

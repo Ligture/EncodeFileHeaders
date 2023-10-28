@@ -54,7 +54,6 @@ def decodefile(filename, password, decodefilename: bool = True):
     m1 = hashlib.md5()
     m1.update(password.encode("utf-8"))
     md5_check = m1.hexdigest()
-    print(md5_check)
     if md5_check != md5.decode("utf-8"):
         endtime = time.time()
         endtime = endtime - sttime
@@ -73,9 +72,7 @@ def decodefile(filename, password, decodefilename: bool = True):
         data = f1.read(length)
 
         cipher = AES.new(passwordnew, AES.MODE_ECB)
-        print(data)
         newdata = cipher.decrypt(data)
-        print(newdata)
         try:
             newdata = unpad(newdata, AES.block_size, 'pkcs7')
         except BaseException as e:
