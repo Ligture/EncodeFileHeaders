@@ -139,7 +139,11 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
         try:
             outputfile = outputfile.replace("/", "-")
             remove_bytes_from_file(filename, encodelen, wrd, outputfile)
+            tempfile1 = open(filename, 'w')
+            tempfile1.write('0')
+            tempfile1.close()
             os.remove(filename)
+
             endtime = time.time()
             endtime = endtime - sttime
             #endtime = datetime.timedelta(seconds=endtime)
@@ -158,7 +162,7 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
                 "filename": filename,
                 "status": "error",
                 "newfile": None,
-                "reason": e,
+                "reason": str(e),
                 "time": endtime,
             }
 
