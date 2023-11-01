@@ -93,6 +93,8 @@ class Ui_MainWindow(object):
         self.textEdit.setLineWrapMode(QTextEdit.NoWrap)
         MainWindow.setCentralWidget(self.centralwidget)
 
+
+
         self.message = QtWidgets.QMessageBox()
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -119,7 +121,7 @@ class Ui_MainWindow(object):
         self.pushButton_3.clicked.connect(self.startdecode)
         self.pushButton_4.clicked.connect(self.startencode)
         self.treeWidget.itemChanged.connect(self.checker)
-        # self.treeWidget.itemExpanded.connect()
+        self.treeWidget.itemExpanded.connect(self.expandevent)
         self.textcursor = self.textEdit.textCursor()
         self.greenFormat = QTextCharFormat()
         self.redFormat = QTextCharFormat()
@@ -141,6 +143,18 @@ class Ui_MainWindow(object):
             format = self.greyFormat
         self.log(text, format)
 
+    def getpath(self, item):
+        path = ""
+        parentlist = []
+        parent = item.parent()
+        while parent is not None:
+            parentlist.append(parent)
+            parent = parent.parent()
+        parentlist.reverse()
+        for b in parentlist:
+            path = os.path.join(path, b.text(0))
+        path = os.path.join(path, item.text(0))
+        return path
     def updatechecklist(self, encode):
         self.checklist = []
 
@@ -157,22 +171,10 @@ class Ui_MainWindow(object):
 
         check1 = get_checked_items(self.treeWidget.invisibleRootItem())
 
-        def getpath(item):
-            path = ""
-            parentlist = []
-            parent = item.parent()
-            while parent is not None:
-                parentlist.append(parent)
-                parent = parent.parent()
-            parentlist.reverse()
-            for b in parentlist:
-                path = os.path.join(path, b.text(0))
-            path = os.path.join(path, item.text(0))
-            if os.path.isfile(path):
-                return path
+
 
         for i in check1:
-            self.checklist.append(getpath(i))
+            self.checklist.append(self.getpath(i))
         self.checklist = list(set(filter(None, self.checklist)))
 
     def choose_dir(self):
@@ -202,6 +204,7 @@ class Ui_MainWindow(object):
         return item
 
     def buttonevent(self):
+
         if os.path.isdir(self.lineEdit.text()):
             self.treeWidget.clear()
             self.root = QtWidgets.QTreeWidgetItem(self.treeWidget)
@@ -212,8 +215,8 @@ class Ui_MainWindow(object):
             icon = icon_provider.icon(file_info)
             self.root.setIcon(0, icon)
             print(self.root.parent())
-
-            self.startadd(self.lineEdit.text(), self.root)
+            self.add2(self.lineEdit.text(), self.root)
+            #self.startadd(self.lineEdit.text(), self.root)
         elif os.path.isfile(self.lineEdit.text()):
             self.treeWidget.clear()
             self.root = QtWidgets.QTreeWidgetItem(self.treeWidget)
@@ -235,9 +238,9 @@ class Ui_MainWindow(object):
                 self.root.setText(2, "×")
 
             self.root.setIcon(0, icon)
-
         else:
             self.log("目录不存在", self.redFormat)
+
 
     def messgaebox(self, type, title, text):
         if type == "info":
@@ -271,6 +274,83 @@ class Ui_MainWindow(object):
 
         def sendmsg(self, arg):
             self.mysignal.emit(arg)
+
+    def expandevent(self, item):
+        if not item == self.root:
+            path = self.getpath(item)
+            path1 = os.listdir(path)
+            for i in path1:
+                if os.path.isfile(path + "\\" + i):
+                    item2 = self.add(item, os.path.basename(i))
+                    size = os.path.getsize(path + "\\" + i)
+                    if size > 1024:
+                        item2.setText(1, str(size // 1024) + " Kb")
+                    else:
+                        item2.setText(1, str(size) + " b")
+                    file_path = path + "\\" + i
+                    icon_provider = QtWidgets.QFileIconProvider()
+                    file_info = QtCore.QFileInfo(file_path)
+                    icon = icon_provider.icon(file_info)
+                    item2.setIcon(0, icon)
+                    if os.path.splitext(file_path)[-1] == ".enc":
+                        item2.setText(2, "√")
+                    else:
+                        item2.setText(2, "×")
+
+                else:
+                    pitem = self.add(item, os.path.basename(i))
+                    icon_provider = QtWidgets.QFileIconProvider()
+                    file_info = QtCore.QFileInfo(path + "\\" + i)
+                    icon = icon_provider.icon(file_info)
+                    pitem.setIcon(0, icon)
+                    if not (os.listdir(path + "\\" + i)):
+                        pass
+                    else:
+                        self.add(pitem, 'None')
+
+
+    def add2(self, path, parent):
+        path1 = os.listdir(path)
+        for i in path1:
+            try:
+                if os.path.isfile(path + "\\" + i):
+                    item = self.add(parent, os.path.basename(i))
+                    size = os.path.getsize(path + "\\" + i)
+                    if size > 1024:
+                        item.setText(1, str(size // 1024) + " Kb")
+                    else:
+                        item.setText(1, str(size) + " b")
+                    file_path = path + "\\" + i
+                    icon_provider = QtWidgets.QFileIconProvider()
+                    file_info = QtCore.QFileInfo(file_path)
+                    icon = icon_provider.icon(file_info)
+                    item.setIcon(0, icon)
+                    if os.path.splitext(file_path)[-1] == ".enc":
+                        item.setText(2, "√")
+                    else:
+                        item.setText(2, "×")
+
+                else:
+                    pitem = self.add(parent, os.path.basename(i))
+                    icon_provider = QtWidgets.QFileIconProvider()
+                    file_info = QtCore.QFileInfo(path + "\\" + i)
+                    icon = icon_provider.icon(file_info)
+                    pitem.setIcon(0, icon)
+                    if not (os.listdir(path + "\\" + i)):
+                        pass
+                    else:
+                        self.add(pitem, 'None')
+            except BaseException as e:
+                print(e)
+
+
+
+
+
+
+
+
+
 
     def startadd(self, path, parent):
         path1 = os.listdir(path)
