@@ -92,11 +92,14 @@ def encodefile(filename, password, encodelen=1024, outputfile=None):
     sttime = time.time()
     filename = filename.replace("/", "\\")
     if not os.path.isfile(filename):
+        endtime = time.time()
+        endtime = endtime - sttime
         return {
             "filename": filename,
             "status": "error",
             "newfile": None,
             "reason": "file not found",
+            "time": endtime
         }
     data = b""
     with open(filename, "rb") as f:

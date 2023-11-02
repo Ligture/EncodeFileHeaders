@@ -29,7 +29,7 @@ def timenow():
 
 
 # noinspection PyUnresolvedReferences
-
+pathlist = []
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -152,7 +152,8 @@ class Ui_MainWindow(object):
             parent = parent.parent()
         parentlist.reverse()
         for b in parentlist:
-            path = os.path.join(path, b.text(0))
+
+            path = os.path.join(path, os.path.normpath(b.text(0)+'\\'))
         path = os.path.join(path, item.text(0))
         return path
     def updatechecklist(self, encode):
@@ -204,14 +205,14 @@ class Ui_MainWindow(object):
         return item
 
     def buttonevent(self):
-
+        text = self.lineEdit.text().rstrip('\\')
         if os.path.isdir(self.lineEdit.text()):
             self.treeWidget.clear()
             self.root = QtWidgets.QTreeWidgetItem(self.treeWidget)
-            self.root.setText(0, self.lineEdit.text())
+            self.root.setText(0, text)
             self.root.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
             icon_provider = QtWidgets.QFileIconProvider()
-            file_info = QtCore.QFileInfo(self.lineEdit.text())
+            file_info = QtCore.QFileInfo(text)
             icon = icon_provider.icon(file_info)
             self.root.setIcon(0, icon)
             print(self.root.parent())
@@ -220,19 +221,19 @@ class Ui_MainWindow(object):
         elif os.path.isfile(self.lineEdit.text()):
             self.treeWidget.clear()
             self.root = QtWidgets.QTreeWidgetItem(self.treeWidget)
-            self.root.setText(0, self.lineEdit.text())
+            self.root.setText(0, text)
             self.root.setCheckState(0, QtCore.Qt.CheckState.Unchecked)
             icon_provider = QtWidgets.QFileIconProvider()
-            file_info = QtCore.QFileInfo(self.lineEdit.text())
+            file_info = QtCore.QFileInfo(text)
             icon = icon_provider.icon(file_info)
 
-            size = os.path.getsize(self.lineEdit.text())
+            size = os.path.getsize(text)
             if size > 1024:
                 self.root.setText(1, str(size // 1024) + " Kb")
             else:
                 self.root.setText(1, str(size) + " b")
 
-            if os.path.splitext(self.lineEdit.text())[-1] == ".enc":
+            if os.path.splitext(text)[-1] == ".enc":
                 self.root.setText(2, "√")
             else:
                 self.root.setText(2, "×")
@@ -276,7 +277,13 @@ class Ui_MainWindow(object):
             self.mysignal.emit(arg)
 
     def expandevent(self, item):
+        print(item)
+        print(pathlist)
         if not item == self.root:
+            if item in pathlist:
+                print('yes')
+                item.removeChild(item.child(0))
+                pathlist.remove(item)
             path = self.getpath(item)
             path1 = os.listdir(path)
             for i in path1:
@@ -307,20 +314,23 @@ class Ui_MainWindow(object):
                         pass
                     else:
                         self.add(pitem, 'None')
+                        pathlist.append(pitem)
+
 
 
     def add2(self, path, parent):
         path1 = os.listdir(path)
+
         for i in path1:
             try:
-                if os.path.isfile(path + "\\" + i):
+                if os.path.isfile(os.path.normpath(path + "\\" + i)):
                     item = self.add(parent, os.path.basename(i))
-                    size = os.path.getsize(path + "\\" + i)
+                    size = os.path.getsize(os.path.normpath(path + "\\" + i))
                     if size > 1024:
                         item.setText(1, str(size // 1024) + " Kb")
                     else:
                         item.setText(1, str(size) + " b")
-                    file_path = path + "\\" + i
+                    file_path = os.path.normpath(path + "\\" + i)
                     icon_provider = QtWidgets.QFileIconProvider()
                     file_info = QtCore.QFileInfo(file_path)
                     icon = icon_provider.icon(file_info)
@@ -333,13 +343,14 @@ class Ui_MainWindow(object):
                 else:
                     pitem = self.add(parent, os.path.basename(i))
                     icon_provider = QtWidgets.QFileIconProvider()
-                    file_info = QtCore.QFileInfo(path + "\\" + i)
+                    file_info = QtCore.QFileInfo(os.path.normpath(path + "\\" + i))
                     icon = icon_provider.icon(file_info)
                     pitem.setIcon(0, icon)
-                    if not (os.listdir(path + "\\" + i)):
+                    if not (os.listdir(os.path.normpath(path + "\\" + i))):
                         pass
                     else:
                         self.add(pitem, 'None')
+                        pathlist.append(pitem)
             except BaseException as e:
                 print(e)
 
