@@ -163,7 +163,7 @@ class Ui_MainWindow(object):
             checked_items = []
             if item.checkState(0) == QtCore.Qt.CheckState.Checked and (
                 os.path.splitext(item.text(0))[-1] != ".enc" or encode is False
-            ):
+            ) and item.text(0) != '':
                 checked_items.append(item)
             for i in range(item.childCount()):
                 child = item.child(i)
@@ -171,8 +171,6 @@ class Ui_MainWindow(object):
             return checked_items
 
         check1 = get_checked_items(self.treeWidget.invisibleRootItem())
-
-
 
         for i in check1:
             self.checklist.append(self.getpath(i))
@@ -205,6 +203,9 @@ class Ui_MainWindow(object):
         return item
 
     def buttonevent(self):
+        global pathlist
+        pathlist = []
+
         text = self.lineEdit.text().rstrip('\\')
         if os.path.isdir(self.lineEdit.text()):
             self.treeWidget.clear()
@@ -277,8 +278,6 @@ class Ui_MainWindow(object):
             self.mysignal.emit(arg)
 
     def expandevent(self, item):
-        print(item)
-        print(pathlist)
         if not item == self.root:
             if item in pathlist:
                 print('yes')
@@ -424,14 +423,11 @@ class decodefile:
         super().__init__()
         self.listfile = listfile
         self.password = password
-        print("encode:", self.listfile)
-
     def run(self):
         print("start run")
         tim = 0
         for i in self.listfile:
             dict1 = decode.decodefile(i, self.password)
-
             print(dict1)
             if dict1["status"] == "ok":
                 format1 = "green"
@@ -470,7 +466,6 @@ class encodefile:
         super().__init__()
         self.listfile = listfile
         self.password = password
-        self.message = QtWidgets.QMessageBox()
         print("encode:", self.listfile)
 
     def run(self):

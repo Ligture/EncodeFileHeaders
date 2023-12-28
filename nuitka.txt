@@ -1,0 +1,1 @@
+nuitka --standalone --lto=no --report=report.xml --mingw64 --show-progress --show-memory --nofollow-import-to=cryptodome,threading --enable-plugin=pyqt5 --output-dir=o --windows-icon-from-ico=qimage.ico --include-data-file=ui.css gui.py
